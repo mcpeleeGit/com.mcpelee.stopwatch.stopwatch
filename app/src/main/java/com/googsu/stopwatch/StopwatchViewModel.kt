@@ -1,4 +1,4 @@
-package com.mcpelee.stopwatch.stopwatch
+package com.googsu.stopwatch
 
 import android.os.SystemClock
 import androidx.lifecycle.ViewModel

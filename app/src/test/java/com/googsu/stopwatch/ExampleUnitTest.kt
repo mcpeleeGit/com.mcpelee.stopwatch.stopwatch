@@ -1,4 +1,4 @@
-package com.mcpelee.stopwatch.stopwatch
+package com.googsu.stopwatch
 
 import org.junit.Assert.*
 import org.junit.Test

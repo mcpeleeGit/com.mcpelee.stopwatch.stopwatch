@@ -1,4 +1,4 @@
-package com.mcpelee.stopwatch.stopwatch
+package com.googsu.stopwatch
 
 data class StopwatchUiState(
     val elapsedMillis: Long = 0L,

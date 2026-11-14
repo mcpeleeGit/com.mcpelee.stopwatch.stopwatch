@@ -1,4 +1,4 @@
-package com.mcpelee.stopwatch.stopwatch
+package com.googsu.stopwatch
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.mcpelee.stopwatch.stopwatch", appContext.packageName)
+        assertEquals("com.googsu.stopwatch", appContext.packageName)
     }
 }

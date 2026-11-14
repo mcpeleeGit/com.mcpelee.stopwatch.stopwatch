@@ -1,4 +1,4 @@
-package com.mcpelee.stopwatch.stopwatch
+package com.googsu.stopwatch
 
 fun formatStopwatchTime(elapsedMillis: Long): String {
     val totalCentiseconds = elapsedMillis.coerceAtLeast(0L) / 10L

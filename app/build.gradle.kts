@@ -1,5 +1,15 @@
+import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.SingleArtifact
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 plugins {
     alias(libs.plugins.android.application)
@@ -33,7 +43,7 @@ val hasReleaseSigningConfig = listOf(
 ).all { !it.isNullOrBlank() }
 
 android {
-    namespace = "com.mcpelee.stopwatch.stopwatch"
+    namespace = "com.googsu.stopwatch"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -41,8 +51,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.mcpelee.stopwatch.stopwatch"
-        minSdk = 23
+        applicationId = "com.googsu.stopwatch"
+        minSdk = 32
         targetSdk = 36
         versionCode = 2
         versionName = "2.0"
@@ -71,6 +81,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "src/main/keepRules/rules.keep",
             )
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
             signingConfigs.findByName("release")?.let {
                 signingConfig = it
             }
@@ -82,6 +95,20 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        val taskName = "package${variant.name.replaceFirstChar { it.uppercase() }}NativeSymbolTables"
+        val taskProvider = tasks.register<PackageNativeSymbolTablesTask>(taskName) {
+            description = "Packages already-stripped native libs as Play Console symbol tables."
+            mergedNativeLibs.set(variant.artifacts.get(SingleArtifact.MERGED_NATIVE_LIBS))
+        }
+        variant.artifacts
+            .use(taskProvider)
+            .wiredWith(PackageNativeSymbolTablesTask::outputDir)
+            .toAppendTo(MultipleArtifact.NATIVE_SYMBOL_TABLES)
     }
 }
 
@@ -110,4 +137,29 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+}
+
+@DisableCachingByDefault(because = "Copies native libraries without transformation.")
+abstract class PackageNativeSymbolTablesTask : DefaultTask() {
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val mergedNativeLibs: DirectoryProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun packageSymbolTables() {
+        val output = outputDir.get().asFile
+        output.deleteRecursively()
+        output.mkdirs()
+
+        mergedNativeLibs.get().asFile.walkTopDown()
+            .filter { it.isFile && it.extension == "so" }
+            .forEach { nativeLib ->
+                val abiDir = output.resolve(nativeLib.parentFile.name)
+                abiDir.mkdirs()
+                nativeLib.copyTo(abiDir.resolve("${nativeLib.name}.sym"), overwrite = true)
+            }
+    }
 }

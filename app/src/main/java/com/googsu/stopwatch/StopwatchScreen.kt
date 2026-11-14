@@ -1,4 +1,4 @@
-package com.mcpelee.stopwatch.stopwatch
+package com.googsu.stopwatch
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
